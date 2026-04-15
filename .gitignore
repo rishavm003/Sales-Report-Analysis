@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.db
+orders.db
+*.csv
+*.xlsx
+.vscode/
+.idea/
