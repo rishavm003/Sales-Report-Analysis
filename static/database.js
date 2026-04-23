@@ -1,6 +1,18 @@
-// ── Theme sync ────────────────────────────────────────────
+// ── Theme sync + dark mode toggle ───────────────────────────────────
 const savedTheme = localStorage.getItem("theme") || "light";
 document.documentElement.setAttribute("data-theme", savedTheme);
+document.addEventListener("DOMContentLoaded", () => {
+    const dmBtn = document.getElementById("darkModeToggle");
+    if (dmBtn) {
+        dmBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+        dmBtn.addEventListener("click", () => {
+            const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("theme", next);
+            dmBtn.textContent = next === "dark" ? "☀️" : "🌙";
+        });
+    }
+});
 
 // ── Toast ─────────────────────────────────────────────────
 function showAdminToast(message, type = "success") {
@@ -163,6 +175,6 @@ document.getElementById("deleteAllBtn").addEventListener("click", async () => {
     if (el) el.addEventListener("change", loadOrders);
 });
 
-// ── Init ──────────────────────────────────────────────────
+// ── Init (auto-refresh 60 s, only when tab is visible) ─────────────────
 loadOrders();
-setInterval(loadOrders, 5000);
+setInterval(() => { if (!document.hidden) loadOrders(); }, 60000);

@@ -22,6 +22,8 @@
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">⚙ Admin Panel</span>
             <div class="d-flex gap-2 align-items-center">
+                <button id="darkModeToggle" title="Toggle Dark Mode" class="btn btn-sm btn-outline-light">🌙</button>
+                <a href="{{ url_for('users_view') }}" class="btn btn-warning btn-sm">👥 Users</a>
                 <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-sm">📊 Dashboard</a>
                 <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">Sign Out</a>
             </div>
@@ -38,18 +40,29 @@
                     <div class="card-body">
                         <form id="addOrderForm">
                             <div class="mb-2"><input class="form-control form-control-sm" name="Date" placeholder="Date (YYYY-MM-DD)" required></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Delivery Date" placeholder="Delivery Date (YYYY-MM-DD)"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="City" placeholder="City" required></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Product Category" placeholder="Product Category" required></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Product Name" placeholder="Product Name" required></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Unit Type" placeholder="Unit Type"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Quantity" placeholder="Quantity" type="number" step="0.01"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Rate (INR)" placeholder="Rate (INR)" type="number" step="0.01"></div>
-                            <div class="mb-2"><input class="form-control form-control-sm" name="Grand Total (INR)" placeholder="Grand Total (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Total Amount (INR)" placeholder="Total Amount (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Cost per Unit (INR)" placeholder="Cost per Unit (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Total Cost (INR)" placeholder="Total Cost (INR)" type="number" step="0.01"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Profit (INR)" placeholder="Profit (INR)" type="number" step="0.01"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Profit Margin (%)" placeholder="Profit Margin (%)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="GST (%)" placeholder="GST (%)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="GST Amount (INR)" placeholder="GST Amount (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Grand Total (INR)" placeholder="Grand Total (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Amount Paid (INR)" placeholder="Amount Paid (INR)" type="number" step="0.01"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Balance (INR)" placeholder="Balance (INR)" type="number" step="0.01"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Order Status" placeholder="Order Status"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Payment Status" placeholder="Payment Status"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Payment Terms" placeholder="Payment Terms (e.g. Net 30)"></div>
                             <div class="mb-2"><input class="form-control form-control-sm" name="Retailer Name" placeholder="Retailer Name"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" name="Phone Number" placeholder="Phone Number"></div>
+                            <div class="mb-2"><input class="form-control form-control-sm" type="email" name="Email ID" placeholder="Email ID"></div>
                             <div class="mb-3"><textarea class="form-control form-control-sm" name="Notes" placeholder="Notes" rows="2"></textarea></div>
                             <button type="submit" class="btn btn-sm w-100" style="background:var(--accent-grad);color:#fff;font-weight:600;border-radius:var(--radius-sm);">Add Order</button>
                         </form>

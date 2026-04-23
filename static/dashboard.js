@@ -133,8 +133,12 @@ async function refreshDashboard() {
 
         // Analytics
         const ana = payload.analytics;
-        document.getElementById("forecastValue").textContent   = `INR ${formatNumber(ana.forecast.next_month)}`;
-        document.getElementById("forecastDetails").textContent = `Growth expected based on last month's performance.`;
+        const nextMonth  = ana.forecast.next_month;
+        const monthAfter = ana.forecast.month_after;
+        const q3         = ana.forecast.q3_expected;
+        const trendArrow = monthAfter > nextMonth ? "▲ Upward" : monthAfter < nextMonth ? "▼ Downward" : "→ Stable";
+        document.getElementById("forecastValue").textContent   = `INR ${formatNumber(nextMonth)}`;
+        document.getElementById("forecastDetails").textContent = `Trend: ${trendArrow}  |  2-month: INR ${formatNumber(monthAfter)}  |  Q3 est.: INR ${formatNumber(q3)}`;
         document.getElementById("rfmChampions").textContent    = `${formatNumber(ana.rfm.champions)} Champions`;
         document.getElementById("rfmAtRisk").textContent       = `${formatNumber(ana.rfm.at_risk)} At Risk`;
         document.getElementById("rfmNew").textContent          = `${formatNumber(ana.rfm.new)} Others`;
@@ -282,6 +286,6 @@ document.getElementById("exportPdfBtn").addEventListener("click", async () => {
     }
 });
 
-// ── Auto-refresh ──────────────────────────────────────────
+// ── Auto-refresh (60 s, only when tab is visible) ─────────────────────
 refreshDashboard();
-setInterval(refreshDashboard, 5000);
+setInterval(() => { if (!document.hidden) refreshDashboard(); }, 60000);

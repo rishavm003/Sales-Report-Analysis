@@ -5,7 +5,11 @@ __pycache__/
 *.pyd
 .db
 orders.db
+users.db
+export.csv
+export.xlsx
 *.csv
 *.xlsx
 .vscode/
 .idea/
+.vercel/

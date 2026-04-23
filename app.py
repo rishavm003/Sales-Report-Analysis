@@ -15,6 +15,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "orders.db"
+USER_DB_PATH = BASE_DIR / "users.db"
 EXCEL_PATH = BASE_DIR / "wholesale_orders_final.xlsx"
 TABLE_NAME = "orders"
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
@@ -60,9 +61,6 @@ def get_connection():
 
 
 def initialize_database():
-    if not EXCEL_PATH.exists():
-        raise FileNotFoundError(f"Dataset file not found: {EXCEL_PATH}")
-
     conn = get_connection()
     try:
         conn.execute(
@@ -99,6 +97,9 @@ def initialize_database():
         )
         current_rows = conn.execute(f"SELECT COUNT(*) AS c FROM {TABLE_NAME}").fetchone()["c"]
         if current_rows == 0:
+            # Only require Excel when seeding an empty database
+            if not EXCEL_PATH.exists():
+                raise FileNotFoundError(f"Dataset file not found: {EXCEL_PATH}")
             source = pd.read_excel(EXCEL_PATH)
             source = source.rename(
                 columns={
@@ -119,10 +120,53 @@ def initialize_database():
         conn.close()
 
 
-def read_orders():
+def initialize_user_database():
+    conn = sqlite3.connect(USER_DB_PATH)
+    try:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL
+            )
+        ''')
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def build_sql_filters(params):
+    """Convert request params into a SQL WHERE clause + parameter list."""
+    conditions, values = [], []
+    city           = (params.get("city")           or "").strip()
+    category       = (params.get("category")       or "").strip()
+    order_status   = (params.get("order_status")   or "").strip()
+    payment_status = (params.get("payment_status") or "").strip()
+    start_date     = (params.get("start_date")     or "").strip()
+    end_date       = (params.get("end_date")       or "").strip()
+
+    if city:           conditions.append('"City" = ?');             values.append(city)
+    if category:       conditions.append('"Product Category" = ?'); values.append(category)
+    if order_status:   conditions.append('"Order Status" = ?');     values.append(order_status)
+    if payment_status: conditions.append('"Payment Status" = ?');   values.append(payment_status)
+    if start_date:     conditions.append('"Date" >= ?');            values.append(start_date)
+    if end_date:       conditions.append('"Date" <= ?');            values.append(end_date + " 23:59:59")
+
+    where = (" WHERE " + " AND ".join(conditions)) if conditions else ""
+    return where, values
+
+
+def read_orders(params=None):
+    """Load orders from DB, optionally filtering at the SQL level."""
     conn = get_connection()
     try:
-        frame = pd.read_sql_query(f"SELECT * FROM {TABLE_NAME}", conn)
+        if params:
+            where, values = build_sql_filters(params)
+            query = f"SELECT * FROM {TABLE_NAME}{where}"
+            frame = pd.read_sql_query(query, conn, params=values or None)
+        else:
+            frame = pd.read_sql_query(f"SELECT * FROM {TABLE_NAME}", conn)
     finally:
         conn.close()
     if not frame.empty:
@@ -130,33 +174,6 @@ def read_orders():
             if col in frame.columns:
                 frame[col] = pd.to_datetime(frame[col], errors="coerce", dayfirst=True)
     return frame
-
-
-def apply_filters(df, params):
-    filtered = df.copy()
-    city = params.get("city", "").strip()
-    category = params.get("category", "").strip()
-    order_status = params.get("order_status", "").strip()
-    payment_status = params.get("payment_status", "").strip()
-    start_date = params.get("start_date", "").strip()
-    end_date = params.get("end_date", "").strip()
-
-    if city:
-        filtered = filtered[filtered["City"] == city]
-    if category:
-        filtered = filtered[filtered["Product Category"] == category]
-    if order_status:
-        filtered = filtered[filtered["Order Status"] == order_status]
-    if payment_status:
-        filtered = filtered[filtered["Payment Status"] == payment_status]
-    if start_date:
-        start = pd.to_datetime(start_date, errors="coerce")
-        filtered = filtered[filtered["Date"] >= start]
-    if end_date:
-        end = pd.to_datetime(end_date, errors="coerce")
-        filtered = filtered[filtered["Date"] <= end]
-
-    return filtered
 
 
 def build_advanced_analytics(filtered):
@@ -347,22 +364,34 @@ def build_dashboard_payload(filtered):
     }
 
 
-def get_filter_options(df):
-    return {
-        "cities": sorted(df["City"].dropna().astype(str).unique().tolist()),
-        "categories": sorted(df["Product Category"].dropna().astype(str).unique().tolist()),
-        "order_statuses": sorted(df["Order Status"].dropna().astype(str).unique().tolist()),
-        "payment_statuses": sorted(df["Payment Status"].dropna().astype(str).unique().tolist()),
-    }
+def get_filter_options_from_db():
+    """Lightweight DISTINCT queries — avoids loading the full table just for dropdowns."""
+    conn = get_connection()
+    try:
+        def distinct(col):
+            rows = conn.execute(
+                f'SELECT DISTINCT "{col}" FROM {TABLE_NAME} WHERE "{col}" IS NOT NULL ORDER BY "{col}"'
+            ).fetchall()
+            return [r[col] for r in rows]
+        return {
+            "cities":           distinct("City"),
+            "categories":       distinct("Product Category"),
+            "order_statuses":   distinct("Order Status"),
+            "payment_statuses": distinct("Payment Status"),
+        }
+    finally:
+        conn.close()
 
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "dev-key-123")
+app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["CACHE_TYPE"] = os.getenv("CACHE_TYPE", "SimpleCache")
 app.config["CACHE_DEFAULT_TIMEOUT"] = int(os.getenv("CACHE_DEFAULT_TIMEOUT", 300))
 
 cache = Cache(app)
 initialize_database()
+initialize_user_database()
 
 
 def is_admin_logged_in():
@@ -376,52 +405,124 @@ def api_admin_guard():
 
 
 @app.get("/")
+def index():
+    return redirect(url_for("admin_login"))
+
+
+@app.get("/dashboard")
 def dashboard():
-    df = read_orders()
-    return render_template("dashboard.html", filter_options=get_filter_options(df))
+    if not is_admin_logged_in():
+        return redirect(url_for("admin_login"))
+    return render_template("dashboard.html", filter_options=get_filter_options_from_db())
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "GET":
-        if is_admin_logged_in():
-            return redirect(url_for("database_view"))
-        return render_template("admin_login.html", error=None)
+        return render_template("admin_login.html", message=None, message_type=None)
+
+    if "signup_username" in request.form:
+        username = request.form.get("signup_username", "").strip()
+        email = request.form.get("signup_email", "").strip()
+        password = request.form.get("signup_password", "")
+        confirm = request.form.get("signup_confirm", "")
+
+        if password != confirm:
+            return render_template("admin_login.html", message="Passwords do not match.", message_type="error", show_signup=True)
+        if not username or not email or not password:
+            return render_template("admin_login.html", message="All fields are required.", message_type="error", show_signup=True)
+
+        try:
+            conn = sqlite3.connect(USER_DB_PATH)
+            conn.execute("INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
+                         (username, email, generate_password_hash(password)))
+            conn.commit()
+        except sqlite3.IntegrityError:
+            return render_template("admin_login.html", message="Username or email already exists.", message_type="error", show_signup=True)
+        finally:
+            conn.close()
+
+        return render_template("admin_login.html", message="Signup successful! You can now log in.", message_type="success", show_signup=False)
 
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "")
+
+    # Admin check
     if username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
         session["is_admin"] = True
+        session["username"] = username
         return redirect(url_for("database_view"))
-    return render_template("admin_login.html", error="Invalid username or password.")
+
+    # Local user check
+    conn = sqlite3.connect(USER_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+
+    if user and check_password_hash(user["password_hash"], password):
+        session["is_admin"] = False
+        session["username"] = user["username"]
+        return redirect(url_for("user_dashboard"))
+
+    if not user:
+        return render_template("admin_login.html", message="User not found. Please sign up.", message_type="error", show_signup=True)
+
+    return render_template("admin_login.html", message="Invalid password.", message_type="error", show_signup=False)
 
 
 @app.get("/admin/logout")
 def admin_logout():
     session.pop("is_admin", None)
+    session.pop("username", None)
     return redirect(url_for("admin_login"))
+
+
+@app.get("/user_dashboard")
+def user_dashboard():
+    if not session.get("username") or session.get("is_admin"):
+        return redirect(url_for("admin_login"))
+    return render_template("user_dashboard.html", filter_options=get_filter_options_from_db(), username=session.get("username"))
+
+
+@app.get("/admin/users")
+def users_view():
+    if not is_admin_logged_in():
+        return redirect(url_for("admin_login"))
+    conn = sqlite3.connect(USER_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    users = conn.execute("SELECT id, username, email FROM users").fetchall()
+    conn.close()
+    return render_template("users.html", users=users)
+
+
+@app.route("/admin/user/<int:user_id>/delete", methods=["GET", "POST"])
+def delete_user(user_id):
+    if not is_admin_logged_in():
+        return redirect(url_for("admin_login"))
+    conn = sqlite3.connect(USER_DB_PATH)
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("users_view"))
 
 
 @app.get("/database")
 def database_view():
     if not is_admin_logged_in():
         return redirect(url_for("admin_login"))
-    df = read_orders()
-    return render_template("database.html", filter_options=get_filter_options(df))
+    return render_template("database.html", filter_options=get_filter_options_from_db())
 
 
 @app.get("/api/dashboard-data")
 @cache.cached(query_string=True)
 def dashboard_data():
-    df = read_orders()
-    filtered = apply_filters(df, request.args)
+    filtered = read_orders(request.args)
     return jsonify(build_dashboard_payload(filtered))
 
 
 @app.get("/api/export/<fmt>")
 def export_data(fmt):
-    df = read_orders()
-    filtered = apply_filters(df, request.args)
+    filtered = read_orders(request.args)
     if fmt == "csv":
         temp_path = BASE_DIR / "export.csv"
         filtered.to_csv(temp_path, index=False)
@@ -439,8 +540,7 @@ def list_orders():
     if unauthorized:
         return unauthorized
     limit = int(request.args.get("limit", "250"))
-    df = read_orders()
-    filtered = apply_filters(df, request.args)
+    filtered = read_orders(request.args)
     if filtered.empty:
         return jsonify([])
     filtered = filtered.sort_values("id", ascending=False).head(limit)

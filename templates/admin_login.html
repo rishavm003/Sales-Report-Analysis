@@ -1,53 +1,764 @@
-<!doctype html>
-<html lang="en" data-theme="light">
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Login — Sales Dashboard</title>
-    <meta name="description" content="Secure admin login for the Sales Dashboard.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Portal - Login</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(16, 23, 40, 0.7);
+            --primary: #4361ee;
+            --primary-glow: rgba(67, 97, 238, 0.5);
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --danger: #ef476f;
+            --input-bg: rgba(255, 255, 255, 0.03);
+            --input-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 20s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes gridMove {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 0 50px;
+            }
+        }
+
+        /* Glowing Orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: 2;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            top: -100px;
+            left: -100px;
+            opacity: 0.4;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent);
+            bottom: -50px;
+            right: -50px;
+            opacity: 0.3;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--secondary);
+            top: 40%;
+            left: 60%;
+            opacity: 0.2;
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-20px) scale(1.05);
+            }
+        }
+
+        /* Animated Data Bars */
+        .chart-bg {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            z-index: 2;
+            opacity: 0.6;
+        }
+
+        .bar {
+            width: 30px;
+            background: linear-gradient(to top, var(--primary), var(--accent));
+            border-radius: 4px 4px 0 0;
+            animation: barGrow ease-in-out infinite alternate;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .bar:nth-child(1) {
+            height: 100px;
+            animation-duration: 2s;
+        }
+
+        .bar:nth-child(2) {
+            height: 150px;
+            animation-duration: 2.5s;
+        }
+
+        .bar:nth-child(3) {
+            height: 80px;
+            animation-duration: 1.8s;
+        }
+
+        .bar:nth-child(4) {
+            height: 200px;
+            animation-duration: 3s;
+        }
+
+        .bar:nth-child(5) {
+            height: 120px;
+            animation-duration: 2.2s;
+        }
+
+        @keyframes barGrow {
+            0% {
+                transform: scaleY(0.7);
+                transform-origin: bottom;
+            }
+
+            100% {
+                transform: scaleY(1.1);
+                transform-origin: bottom;
+            }
+        }
+
+        /* Animated Donut Rings (Right side) */
+        .rings-bg {
+            position: absolute;
+            top: 20%;
+            right: 15%;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            opacity: 0.7;
+            transform: perspective(600px) rotateY(-20deg) rotateX(20deg);
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+
+        .ring-1 {
+            width: 200px;
+            height: 200px;
+            border-top: 4px solid var(--accent);
+            border-bottom: 2px solid rgba(76, 201, 240, 0.2);
+            animation: spin 8s linear infinite;
+        }
+
+        .ring-2 {
+            width: 150px;
+            height: 150px;
+            border-right: 4px solid var(--primary);
+            border-left: 2px solid rgba(67, 97, 238, 0.2);
+            animation: spin 5s linear infinite reverse;
+        }
+
+        .ring-3 {
+            width: 100px;
+            height: 100px;
+            border-top: 4px solid var(--secondary);
+            border-bottom: 2px solid rgba(63, 55, 201, 0.2);
+            animation: spin 4s linear infinite;
+        }
+
+        .ring-data {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+            animation: pulse-op 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse-op {
+
+            0%,
+            100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Animated Stats Widget (Right bottom) */
+        .stats-bg {
+            position: absolute;
+            bottom: 12%;
+            right: 12%;
+            width: 220px;
+            background: rgba(16, 23, 40, 0.4);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 2;
+            opacity: 0.8;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: float-delayed 8s ease-in-out infinite;
+        }
+
+        .stat-line {
+            margin-bottom: 12px;
+        }
+
+        .stat-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .stat-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .fill-1 {
+            width: 0%;
+            background: var(--accent);
+            animation: fillBar1 3s ease-out forwards infinite alternate;
+        }
+
+        .fill-2 {
+            width: 0%;
+            background: var(--primary);
+            animation: fillBar2 4s ease-out forwards infinite alternate;
+        }
+
+        .fill-3 {
+            width: 0%;
+            background: var(--danger);
+            animation: fillBar3 2.5s ease-out forwards infinite alternate;
+        }
+
+        @keyframes fillBar1 {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 75%;
+            }
+        }
+
+        @keyframes fillBar2 {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 60%;
+            }
+        }
+
+        @keyframes fillBar3 {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 25%;
+            }
+        }
+
+        @keyframes float-delayed {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        /* Lightbeam Border Animation */
+        @property --gradient-angle {
+            syntax: "<angle>";
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        @keyframes border-spin {
+            0% {
+                --gradient-angle: 0deg;
+            }
+
+            100% {
+                --gradient-angle: 360deg;
+            }
+        }
+
+        .lightbeam {
+            position: relative;
+            z-index: 1;
+            /* ensure stacking context */
+        }
+
+        .lightbeam::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            /* thickness of the lightbeam */
+            border-radius: inherit;
+            background: conic-gradient(from var(--gradient-angle), transparent 0%, var(--accent) 30%, var(--primary) 50%, transparent 60%, transparent 100%);
+            animation: border-spin 3s linear infinite;
+            z-index: -1;
+            /* mask hollows out the center so background translucency isn't ruined */
+            padding: 2px;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Card Container (3D Flip) */
+        .scene {
+            width: 100%;
+            max-width: 420px;
+            perspective: 1200px;
+            z-index: 10;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            position: relative;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .scene.sign-up-mode .card {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            width: 100%;
+            backface-visibility: hidden;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .card-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: rotateY(180deg);
+        }
+
+        /* Branding */
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .logo i {
+            font-size: 32px;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(76, 201, 240, 0.6);
+        }
+
+        .logo h2 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Forms */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 20px;
+            transition: 0.3s;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+        }
+
+        .input-group input:focus+i,
+        .input-group input:not(:placeholder-shown)+i {
+            color: var(--accent);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: #0b0f19;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px var(--primary);
+        }
+
+        .btn-submit::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: 0.3s;
+        }
+
+        .btn-submit:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .switch-mode {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .switch-mode button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            margin-left: 5px;
+            transition: 0.3s;
+        }
+
+        .switch-mode button:hover {
+            text-shadow: 0 0 10px rgba(76, 201, 240, 0.5);
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background: rgba(239, 71, 111, 0.1);
+            border: 1px solid rgba(239, 71, 111, 0.3);
+            color: #ff8fa3;
+        }
+
+        .alert-success {
+            background: rgba(6, 214, 160, 0.1);
+            border: 1px solid rgba(6, 214, 160, 0.3);
+            color: #80ed99;
+        }
+
+        .alert i {
+            font-size: 18px;
+        }
+    </style>
 </head>
+
 <body>
 
-<script>
-    const t = localStorage.getItem("theme") || "light";
-    document.documentElement.setAttribute("data-theme", t);
-</script>
+    <!-- Animated Data Background Elements -->
+    <div class="grid-bg"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-<div class="login-wrapper">
-    <div class="login-card">
-        <div class="login-logo">⚡</div>
-        <h1 class="login-title">Admin Sign In</h1>
-        <p class="login-subtitle">Sales Dashboard Control Panel</p>
-
-        {% if error %}
-        <div class="alert alert-danger py-2 mb-3" style="border-radius:var(--radius-sm);font-size:13px;">
-            ⚠ {{ error }}
-        </div>
-        {% endif %}
-
-        <form method="post" action="{{ url_for('admin_login') }}">
-            <div class="mb-3">
-                <label class="form-label" for="username">Username</label>
-                <input type="text" id="username" class="form-control" name="username" autocomplete="username" required autofocus>
-            </div>
-            <div class="mb-4">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" id="password" class="form-control" name="password" autocomplete="current-password" required>
-            </div>
-            <button type="submit" class="btn w-100" style="background:var(--accent-grad);color:#fff;font-weight:600;padding:10px;border-radius:var(--radius-sm);font-size:0.9rem;letter-spacing:0.02em;">
-                Sign In →
-            </button>
-        </form>
-
-        <p class="text-center mt-4 mb-0" style="font-size:12px;color:var(--text-muted);">
-            <a href="{{ url_for('dashboard') }}" style="color:var(--accent-1);text-decoration:none;">← Back to Dashboard</a>
-        </p>
+    <div class="chart-bg">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
     </div>
-</div>
 
+    <!-- Right side animated donut rings -->
+    <div class="rings-bg">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="ring-data">84%</div>
+    </div>
+
+    <!-- Floating Stats Widget Right -->
+    <div class="stats-bg lightbeam">
+        <div class="stat-line">
+            <div class="stat-label">Conv. Rate</div>
+            <div class="stat-track">
+                <div class="stat-fill fill-1"></div>
+            </div>
+        </div>
+        <div class="stat-line">
+            <div class="stat-label">Retention</div>
+            <div class="stat-track">
+                <div class="stat-fill fill-2"></div>
+            </div>
+        </div>
+        <div class="stat-line">
+            <div class="stat-label">Churn Status</div>
+            <div class="stat-track">
+                <div class="stat-fill fill-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="scene" id="scene">
+        <div class="card">
+
+            <!-- LOGIN FACE (Front) -->
+            <div class="card-face card-front lightbeam">
+                <div class="logo">
+                    <i class='bx bx-data'></i>
+                    <h2>DataPortal</h2>
+                </div>
+                <p class="subtitle">Secure access to your enterprise analytics and sales performance metrics.</p>
+
+                <form method="POST" action="{{ url_for('admin_login') }}">
+                    {% if message and not show_signup %}
+                <div class="alert {{ 'alert-success' if message_type == 'success' else 'alert-error' }}">
+                    <i class='bx {{ "bx-check-circle" if message_type == "success" else "bx-error-circle" }}'></i>
+                    {{ message }}
+                </div>
+                {% endif %}
+
+                    <div class="input-group">
+                        <input type="text" placeholder="Username" name="username" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="password" placeholder="Password" name="password" required>
+                        <i class='bx bxs-lock-alt'></i>
+                    </div>
+
+                    <button type="submit" class="btn-submit lightbeam">Authenticate</button>
+
+                    <div class="switch-mode">
+                        New analyst? <button type="button" onclick="toggleMode()">Create Account</button>
+                    </div>
+
+
+                </form>
+            </div>
+
+            <!-- SIGNUP FACE (Back) -->
+            <div class="card-face card-back lightbeam">
+                <div class="logo">
+                    <i class='bx bx-line-chart'></i>
+                    <h2>Join Analytics</h2>
+                </div>
+                <p class="subtitle">Register to unlock advanced data visualizations and reporting tools.</p>
+
+                <form method="POST" action="{{ url_for('admin_login') }}">
+                    {% if message and show_signup %}
+                    <div class="alert {{ 'alert-success' if message_type == 'success' else 'alert-error' }}">
+                        <i class='bx {{ "bx-check-circle" if message_type == "success" else "bx-error-circle" }}'></i>
+                        {{ message }}
+                    </div>
+                    {% endif %}
+
+                    <div class="input-group">
+                        <input type="text" placeholder="Username" name="signup_username" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="email" placeholder="Email Address" name="signup_email" required>
+                        <i class='bx bx-envelope'></i>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="password" placeholder="Password" name="signup_password" required>
+                        <i class='bx bxs-lock-alt'></i>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="password" placeholder="Confirm Password" name="signup_confirm" required>
+                        <i class='bx bxs-check-shield'></i>
+                    </div>
+
+                    <button type="submit" class="btn-submit lightbeam">Register Access</button>
+
+                    <div class="switch-mode">
+                        Already have access? <button type="button" onclick="toggleMode()">Sign In</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const scene = document.getElementById('scene');
+
+        function toggleMode() {
+            scene.classList.toggle('sign-up-mode');
+        }
+
+        // Auto-switch to signup face if there was a signup error
+        {% if show_signup %}
+        scene.classList.add('sign-up-mode');
+        {% endif %}
+    </script>
 </body>
+
 </html>
