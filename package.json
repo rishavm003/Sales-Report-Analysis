@@ -1,0 +1,13 @@
+{
+  "name": "sales-analysis-dashboard",
+  "version": "1.0.0",
+  "description": "A comprehensive sales analysis dashboard with data visualization capabilities",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python app.py"
+  },
+  "keywords": ["flask", "dashboard", "data-analysis", "sales"],
+  "author": "Rishav",
+  "license": "MIT"
+}
