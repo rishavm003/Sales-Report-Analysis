@@ -506,6 +506,11 @@ def delete_user(user_id):
     return redirect(url_for("users_view"))
 
 
+@app.get("/charts-report")
+def charts_report():
+    return render_template("charts_report.html")
+
+
 @app.get("/database")
 def database_view():
     if not is_admin_logged_in():
