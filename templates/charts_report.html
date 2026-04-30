@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sales Analysis Report – Charts & Insights</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0e1a;--surface:#111827;--card:#161d2e;--border:#1e2d45;
+    --accent:#6366f1;--accent2:#06b6d4;--accent3:#10b981;--accent4:#f59e0b;--accent5:#ef4444;
+    --text:#e2e8f0;--muted:#64748b;--grad:linear-gradient(135deg,#6366f1,#06b6d4);
+  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  .hero{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0c2340 100%);padding:60px 40px 50px;text-align:center;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(99,102,241,.15) 0%,transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(6,182,212,.12) 0%,transparent 60%)}
+  .hero h1{font-size:2.8rem;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;position:relative}
+  .hero p{color:var(--muted);font-size:1rem;margin-top:10px;position:relative}
+  .badge{display:inline-block;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:600;margin-bottom:16px;letter-spacing:.5px;text-transform:uppercase}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;padding:36px 40px 0}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 20px;position:relative;overflow:hidden;transition:transform .2s}
+  .kpi:hover{transform:translateY(-3px)}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .kpi.c1::before{background:var(--grad)}
+  .kpi.c2::before{background:linear-gradient(90deg,#10b981,#06b6d4)}
+  .kpi.c3::before{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+  .kpi.c4::before{background:linear-gradient(90deg,#8b5cf6,#ec4899)}
+  .kpi.c5::before{background:linear-gradient(90deg,#06b6d4,#3b82f6)}
+  .kpi label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .kpi .val{font-size:1.6rem;font-weight:800;margin-top:6px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .kpi.c2 .val{background:linear-gradient(90deg,#10b981,#06b6d4);-webkit-background-clip:text}
+  .kpi.c3 .val{background:linear-gradient(90deg,#f59e0b,#ef4444);-webkit-background-clip:text}
+  .kpi.c4 .val{background:linear-gradient(90deg,#8b5cf6,#ec4899);-webkit-background-clip:text}
+  .kpi.c5 .val{background:linear-gradient(90deg,#06b6d4,#3b82f6);-webkit-background-clip:text}
+  .kpi .sub{font-size:.72rem;color:var(--muted);margin-top:4px}
+  .grid{display:grid;gap:24px;padding:24px 40px 40px}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .grid-1{grid-template-columns:1fr}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px;transition:transform .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .card h3{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+  .card h3 span{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .chart-wrap{position:relative;height:260px}
+  .chart-wrap.tall{height:320px}
+  .section-title{padding:8px 40px 4px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent)}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.82rem}
+  th{text-align:left;padding:10px 14px;color:var(--muted);font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+  td{padding:10px 14px;border-bottom:1px solid rgba(30,45,69,.6);color:var(--text)}
+  tr:hover td{background:rgba(99,102,241,.05)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:600}
+  .pill.green{background:rgba(16,185,129,.15);color:#10b981}
+  .pill.yellow{background:rgba(245,158,11,.15);color:#f59e0b}
+  .pill.red{background:rgba(239,68,68,.15);color:#ef4444}
+  .pill.blue{background:rgba(99,102,241,.15);color:#818cf8}
+  .footer{text-align:center;padding:24px;color:var(--muted);font-size:.78rem;border-top:1px solid var(--border)}
+  @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}.kpis{padding:24px 20px 0}.grid{padding:16px 20px 30px}.hero{padding:40px 20px 32px}.hero h1{font-size:1.9rem}}
+  @media print{body{background:#fff;color:#111}.card{border-color:#ddd;background:#fff}.hero{background:#1e1b4b}.kpi{background:#f8f9fa;border-color:#ddd}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">📊 Wholesale Sales Report</div>
+  <h1>Sales Analysis Dashboard</h1>
+  <p>10,000 Orders · Jan 2020 – Dec 2024 · 15 Cities · 8 Product Categories</p>
+</div>
+
+<!-- KPIs -->
+<div class="kpis">
+  <div class="kpi c1"><label>Total Revenue</label><div class="val">₹426.7 Cr</div><div class="sub">Across all 5 years</div></div>
+  <div class="kpi c2"><label>Total Profit</label><div class="val">₹128.5 Cr</div><div class="sub">Net earnings</div></div>
+  <div class="kpi c3"><label>Avg Profit Margin</label><div class="val">35.02%</div><div class="sub">Across all categories</div></div>
+  <div class="kpi c4"><label>Total Orders</label><div class="val">10,000</div><div class="sub">5 years of sales</div></div>
+  <div class="kpi c5"><label>Active Cities</label><div class="val">15</div><div class="sub">Pan-India coverage</div></div>
+</div>
+
+<!-- Row 1 -->
+<div class="section-title" style="margin-top:32px">📈 Trends & Revenue</div>
+<div class="grid grid-2">
+  <div class="card">
+    <h3><span style="background:var(--accent)"></span>Monthly Sales Trend (2023–2024)</h3>
+    <div class="chart-wrap tall"><canvas id="monthlySales"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent3)"></span>Yearly Revenue vs Profit</h3>
+    <div class="chart-wrap tall"><canvas id="yearlyBar"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 2 -->
+<div class="section-title">🏷️ Category Performance</div>
+<div class="grid grid-3">
+  <div class="card">
+    <h3><span style="background:var(--accent2)"></span>Revenue by Category</h3>
+    <div class="chart-wrap"><canvas id="catSales"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent4)"></span>Orders by Category</h3>
+    <div class="chart-wrap"><canvas id="catOrders"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent3)"></span>Avg Profit Margin by Category</h3>
+    <div class="chart-wrap"><canvas id="catMargin"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 3 -->
+<div class="section-title">📦 Products & Cities</div>
+<div class="grid grid-2">
+  <div class="card">
+    <h3><span style="background:#8b5cf6"></span>Top 10 Products by Revenue</h3>
+    <div class="chart-wrap tall"><canvas id="topProducts"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent2)"></span>Top 10 Cities by Revenue</h3>
+    <div class="chart-wrap tall"><canvas id="cityBar"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 4 -->
+<div class="section-title">💳 Orders & Payments</div>
+<div class="grid grid-3">
+  <div class="card">
+    <h3><span style="background:var(--accent4)"></span>Order Status Distribution</h3>
+    <div class="chart-wrap"><canvas id="orderStatus"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent3)"></span>Payment Status Split</h3>
+    <div class="chart-wrap"><canvas id="paymentStatus"></canvas></div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent)"></span>Payment Terms Breakdown</h3>
+    <div class="chart-wrap"><canvas id="paymentTerms"></canvas></div>
+  </div>
+</div>
+
+<!-- Row 5 Tables -->
+<div class="section-title">🏆 Top Performers</div>
+<div class="grid grid-2">
+  <div class="card">
+    <h3><span style="background:var(--accent4)"></span>Top 10 Retailers by Revenue</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Retailer</th><th>Revenue</th></tr></thead>
+        <tbody id="retailerTable"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3><span style="background:var(--accent2)"></span>Category Revenue Summary</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th>Revenue</th><th>Profit</th><th>Orders</th><th>Margin</th></tr></thead>
+        <tbody id="categoryTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Sales Analysis Report · Generated from 10,000 Wholesale Orders · 2020–2024</div>
+
+<script>
+const MONTHS=['2023-01','2023-02','2023-03','2023-04','2023-05','2023-06','2023-07','2023-08','2023-09','2023-10','2023-11','2023-12','2024-01','2024-02','2024-03','2024-04','2024-05','2024-06','2024-07','2024-08','2024-09','2024-10','2024-11','2024-12'];
+const MONTH_LABELS=['Jan 23','Feb 23','Mar 23','Apr 23','May 23','Jun 23','Jul 23','Aug 23','Sep 23','Oct 23','Nov 23','Dec 23','Jan 24','Feb 24','Mar 24','Apr 24','May 24','Jun 24','Jul 24','Aug 24','Sep 24','Oct 24','Nov 24','Dec 24'];
+const SALES=[77.03,79.85,77.93,63.69,73.93,56.11,61.09,81.03,85.93,69.25,76.76,74.88,72.05,67.80,73.28,62.56,70.66,62.78,68.37,74.88,57.62,79.56,62.57,75.38];
+const PROFITS=[24.29,24.94,23.00,18.96,22.98,15.93,18.27,24.64,24.20,19.80,23.38,22.42,21.11,20.31,22.66,19.61,20.98,19.32,20.44,22.96,17.22,23.69,19.87,22.16];
+
+const CATS=['Ceramics','Chemicals','Electronics','Furniture','Handicrafts','Plastics','Spices','Textiles'];
+const CAT_REV=[325.8,242.9,974.2,1198.6,834.3,111.6,196.0,383.9];
+const CAT_PRF=[98.9,74.6,288.0,359.8,254.3,33.8,59.9,115.9];
+const CAT_ORD=[1238,1202,1268,1262,1250,1263,1273,1244];
+const CAT_MARGIN=[35.29,35.27,34.71,34.73,35.16,34.97,35.29,34.85];
+
+const CITIES=['Ahmedabad','Pune','Bhopal','Vadodara','Lucknow','Nagpur','Mumbai','Delhi','Jaipur','Indore'];
+const CITY_REV=[304.8,300.5,295.7,294.4,291.4,289.1,288.7,281.6,281.4,281.2];
+const CITY_PRF=[91.4,90.6,89.9,91.0,87.8,87.6,88.1,84.1,85.3,83.7];
+
+const PRODUCTS=['Steel Rack','Office Table','Plastic Stool','Wooden Chair','BT Speakers','Bookshelf','USB Cables','Jute Bags','Painted Canvas','Phone Cases'];
+const PROD_REV=[263.2,259.1,230.5,225.0,220.8,220.8,201.2,189.8,187.7,186.4];
+
+const RETAILERS=[{n:'Anil Shah',r:18.16},{n:'Sanjay Jain',r:17.30},{n:'Vivek Agarwal',r:16.05},{n:'Sunita Nair',r:15.68},{n:'Deepak Tiwari',r:14.76},{n:'Ashok Reddy',r:14.55},{n:'Kavita Sharma',r:14.31},{n:'Divya Kumar',r:14.21},{n:'Kiran Joshi',r:13.97},{n:'Kavita Shah',r:13.88}];
+
+const CAT_TABLE=[
+  {cat:'Furniture',rev:'₹119.9 Cr',prf:'₹35.98 Cr',ord:1262,mg:'34.73%'},
+  {cat:'Electronics',rev:'₹97.4 Cr',prf:'₹28.80 Cr',ord:1268,mg:'34.71%'},
+  {cat:'Handicrafts',rev:'₹83.4 Cr',prf:'₹25.43 Cr',ord:1250,mg:'35.16%'},
+  {cat:'Textiles',rev:'₹38.4 Cr',prf:'₹11.59 Cr',ord:1244,mg:'34.85%'},
+  {cat:'Ceramics',rev:'₹32.6 Cr',prf:'₹9.89 Cr',ord:1238,mg:'35.17%'},
+  {cat:'Chemicals',rev:'₹24.3 Cr',prf:'₹7.46 Cr',ord:1202,mg:'35.27%'},
+  {cat:'Spices',rev:'₹19.6 Cr',prf:'₹5.99 Cr',ord:1273,mg:'35.29%'},
+  {cat:'Plastics',rev:'₹11.2 Cr',prf:'₹3.38 Cr',ord:1263,mg:'34.97%'},
+];
+
+// Defaults
+Chart.defaults.color='#64748b';
+Chart.defaults.font.family='Inter';
+Chart.defaults.plugins.legend.labels.boxWidth=10;
+Chart.defaults.plugins.legend.labels.padding=14;
+
+const GRID={color:'rgba(30,45,69,.5)',drawBorder:false};
+const TICK={color:'#475569',font:{size:10}};
+
+// 1. Monthly Sales Line
+new Chart(document.getElementById('monthlySales'),{
+  type:'line',
+  data:{labels:MONTH_LABELS,datasets:[
+    {label:'Revenue (₹ Cr)',data:SALES,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,.1)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#6366f1',borderWidth:2},
+    {label:'Profit (₹ Cr)',data:PROFITS,borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.08)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:'#10b981',borderWidth:2}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{grid:GRID,ticks:{...TICK,maxRotation:45}},y:{grid:GRID,ticks:TICK}}}
+});
+
+// 2. Yearly Bar
+new Chart(document.getElementById('yearlyBar'),{
+  type:'bar',
+  data:{labels:['2020','2021','2022','2023','2024'],datasets:[
+    {label:'Revenue (₹ Cr)',data:[836.1,869.6,856.5,877.5,827.5],backgroundColor:'rgba(99,102,241,.7)',borderRadius:6},
+    {label:'Profit (₹ Cr)',data:[252.0,260.8,259.1,262.8,250.3],backgroundColor:'rgba(16,185,129,.7)',borderRadius:6}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{grid:GRID,ticks:TICK},y:{grid:GRID,ticks:TICK}}}
+});
+
+// 3. Category Sales Doughnut
+new Chart(document.getElementById('catSales'),{
+  type:'doughnut',
+  data:{labels:CATS,datasets:[{data:CAT_REV,backgroundColor:['#6366f1','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#f97316'],borderWidth:2,borderColor:'#161d2e',hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
+});
+
+// 4. Orders by Category Bar
+new Chart(document.getElementById('catOrders'),{
+  type:'bar',
+  data:{labels:CATS,datasets:[{label:'Orders',data:CAT_ORD,backgroundColor:['#6366f1','#06b6d4','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#f97316'],borderRadius:6}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:GRID,ticks:{...TICK,maxRotation:45}},y:{grid:GRID,ticks:TICK}}}
+});
+
+// 5. Margin by Category Horizontal Bar
+new Chart(document.getElementById('catMargin'),{
+  type:'bar',
+  data:{labels:CATS,datasets:[{label:'Avg Margin %',data:CAT_MARGIN,backgroundColor:'rgba(6,182,212,.7)',borderRadius:6}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:GRID,ticks:TICK,min:34,max:36},y:{grid:GRID,ticks:{...TICK,font:{size:10}}}}}
+});
+
+// 6. Top Products Horizontal Bar
+new Chart(document.getElementById('topProducts'),{
+  type:'bar',
+  data:{labels:PRODUCTS,datasets:[{label:'Revenue (₹ Cr)',data:PROD_REV,backgroundColor:'rgba(139,92,246,.7)',borderRadius:6,hoverBackgroundColor:'rgba(139,92,246,1)'}]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:GRID,ticks:TICK},y:{grid:GRID,ticks:{...TICK,font:{size:10}}}}}
+});
+
+// 7. City Revenue Horizontal Bar
+new Chart(document.getElementById('cityBar'),{
+  type:'bar',
+  data:{labels:CITIES,datasets:[
+    {label:'Revenue (₹ Cr)',data:CITY_REV,backgroundColor:'rgba(6,182,212,.7)',borderRadius:6},
+    {label:'Profit (₹ Cr)',data:CITY_PRF,backgroundColor:'rgba(16,185,129,.7)',borderRadius:6}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{position:'top'}},scales:{x:{grid:GRID,ticks:TICK},y:{grid:GRID,ticks:{...TICK,font:{size:10}}}}}
+});
+
+// 8. Order Status Pie
+new Chart(document.getElementById('orderStatus'),{
+  type:'pie',
+  data:{labels:['Processing','Delivered','Pending','Confirmed','Cancelled','Shipped'],datasets:[{data:[1718,1713,1671,1646,1626,1626],backgroundColor:['#6366f1','#10b981','#f59e0b','#06b6d4','#ef4444','#8b5cf6'],borderWidth:2,borderColor:'#161d2e',hoverOffset:5}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
+});
+
+// 9. Payment Status Doughnut
+new Chart(document.getElementById('paymentStatus'),{
+  type:'doughnut',
+  data:{labels:['Paid','Pending','Partial'],datasets:[{data:[3375,3338,3287],backgroundColor:['#10b981','#ef4444','#f59e0b'],borderWidth:2,borderColor:'#161d2e',hoverOffset:6}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom'}}}
+});
+
+// 10. Payment Terms Polar
+new Chart(document.getElementById('paymentTerms'),{
+  type:'polarArea',
+  data:{labels:['COD','Advance 50%','Net 30','Net 60','Net 45','Advance 100%'],datasets:[{data:[1713,1704,1691,1665,1620,1607],backgroundColor:['rgba(99,102,241,.7)','rgba(6,182,212,.7)','rgba(16,185,129,.7)','rgba(245,158,11,.7)','rgba(239,68,68,.7)','rgba(139,92,246,.7)'],borderWidth:1,borderColor:'#161d2e'}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{r:{grid:{color:'rgba(30,45,69,.5)'},ticks:{color:'#475569',font:{size:9}}}}}
+});
+
+// Retailer Table
+const rtb=document.getElementById('retailerTable');
+RETAILERS.forEach((r,i)=>{
+  const row=document.createElement('tr');
+  const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+  row.innerHTML=`<td>${medal}</td><td>${r.n}</td><td style="color:#10b981;font-weight:600">₹${r.r.toFixed(2)} Cr</td>`;
+  rtb.appendChild(row);
+});
+
+// Category Table
+const ctb=document.getElementById('categoryTable');
+CAT_TABLE.forEach(r=>{
+  const row=document.createElement('tr');
+  row.innerHTML=`<td style="font-weight:600">${r.cat}</td><td style="color:#6366f1">${r.rev}</td><td style="color:#10b981">${r.prf}</td><td>${r.ord}</td><td><span class="pill green">${r.mg}</span></td>`;
+  ctb.appendChild(row);
+});
+</script>
+</body>
+</html>
