@@ -1,7 +1,7 @@
 {
   "name": "sales-analysis-dashboard",
   "version": "1.1.0",
-  "description": "Enhanced dashboard with additional features",
+  "description": "A comprehensive sales analysis dashboard with data visualization capabilities",
   "main": "app.py",
   "scripts": {
     "start": "python app.py",
